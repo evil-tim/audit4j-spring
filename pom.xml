@@ -46,7 +46,7 @@
 			<timezone>+05:30</timezone>
 		</developer>
 	</developers>
-	
+
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -61,12 +61,12 @@
 		<url>scm:git:git@github.com:audit4j/audit4j-spring.git</url>
 		<tag>2.4.0</tag>
 	</scm>
-	
+
 	<issueManagement>
 		<system>github</system>
 		<url>https://github.com/audit4j/audit4j-core/issues</url>
 	</issueManagement>
-	
+
 	<ciManagement>
 		<system>travis-ci</system>
 		<url>https://travis-ci.org/audit4j/audit4j-spring</url>
@@ -76,7 +76,7 @@
 		<junit.version>4.11</junit.version>
 		<audit4j.version>2.4.1</audit4j.version>
 		<spring.version>4.2.2.RELEASE</spring.version>
-		<spring.security.version>4.0.3.RELEASE</spring.security.version>
+		<spring.security.version>5.5.5</spring.security.version>
 		<aspectj.version>1.8.7</aspectj.version>
 	</properties>
 
@@ -155,7 +155,7 @@
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
-					<!-- [#2413] Make compiler warnings a bit more visible But don't fail 
+					<!-- [#2413] Make compiler warnings a bit more visible But don't fail
 						(yet) -->
 					<compilerArgs>
 						<arg>-Xlint:varargs</arg>
