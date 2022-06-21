@@ -20,29 +20,31 @@ package org.audit4j.integration.spring;
 
 import java.lang.reflect.Method;
 
-import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.audit4j.core.AuditManager;
+import org.audit4j.core.dto.AnnotationAuditEvent;
 import org.audit4j.core.exception.Audit4jRuntimeException;
 
 /**
  * The Class AuditAspect.
- * 
+ *
  * <pre>
  * {@code
- *  
+ *
  *     <aop:aspectj-autoproxy>
  *         ...
  *         <aop:include name="auditAspect"/>
  *     </aop:aspectj-autoproxy>
- *     
- *     <bean id="auditAspect" class="org.audit4j.integration.spring.AuditAspect" />
- * 
+ *
+ *     <bean id="auditAspect" class=
+"org.audit4j.integration.spring.AuditAspect" />
+ *
  * }
  * </pre>
- * 
+ *
  * @author <a href="mailto:janith3000@gmail.com">Janith Bandara</a>
  */
 @Aspect
@@ -50,31 +52,42 @@ public class AuditAspect {
 
     /**
      * Audit Aspect.
-     * 
-     * @param jointPoint
-     *            the joint point
-     * @throws Throwable
-     *             the throwable
+     *
+     * @param joinPoint the joint point
+     * @throws Throwable the throwable
      */
-    @Before("@within(org.audit4j.core.annotation.Audit) || @annotation(org.audit4j.core.annotation.Audit)")
-    public void audit(final JoinPoint jointPoint) throws Throwable {
-
-        MethodSignature methodSignature = (MethodSignature) jointPoint.getSignature();
+    @Around("@within(org.audit4j.core.annotation.Audit) || @annotation(org.audit4j.core.annotation.Audit)")
+    public Object audit(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         Method method = methodSignature.getMethod();
 
         if (method.getDeclaringClass().isInterface()) {
             try {
-                method = jointPoint.getTarget().getClass()
-                        .getDeclaredMethod(jointPoint.getSignature().getName(), method.getParameterTypes());
+                method = joinPoint.getTarget().getClass().getDeclaredMethod(joinPoint.getSignature().getName(), method.getParameterTypes());
             } catch (final SecurityException exception) {
-                throw new Audit4jRuntimeException(
-                        "Exception occured while proceding Audit Aspect in Audit4j Spring Integration", exception);
+                throw new Audit4jRuntimeException("Exception occured while proceding Audit Aspect in Audit4j Spring Integration",
+                    exception);
             } catch (final NoSuchMethodException exception) {
-                throw new Audit4jRuntimeException(
-                        "Exception occured while proceding Audit Aspect in Audit4j Spring Integration", exception);
+                throw new Audit4jRuntimeException("Exception occured while proceding Audit Aspect in Audit4j Spring Integration",
+                    exception);
             }
         }
 
-        AuditManager.getInstance().audit(jointPoint.getTarget().getClass(), method, jointPoint.getArgs());
+        Object result = null;
+        Throwable thrownResult = null;
+        try {
+            result = joinPoint.proceed();
+        } catch (Throwable t) {
+            thrownResult = t;
+        }
+
+        AnnotationAuditEvent event = new AnnotationAuditEvent(joinPoint.getTarget().getClass(), method, joinPoint.getArgs(), result,
+            thrownResult);
+        AuditManager.getInstance().audit(event);
+
+        if (thrownResult != null) {
+            throw thrownResult;
+        }
+        return result;
     }
 }
