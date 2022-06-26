@@ -27,6 +27,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.audit4j.core.AuditManager;
 import org.audit4j.core.dto.AnnotationAuditEvent;
 import org.audit4j.core.exception.Audit4jRuntimeException;
+import org.audit4j.core.util.StopWatch;
 
 /**
  * The Class AuditAspect.
@@ -73,16 +74,19 @@ public class AuditAspect {
             }
         }
 
+        StopWatch stopwatch = new StopWatch();
         Object result = null;
         Throwable thrownResult = null;
+        stopwatch.start();
         try {
             result = joinPoint.proceed();
         } catch (Throwable t) {
             thrownResult = t;
         }
+        stopwatch.stop();
 
         AnnotationAuditEvent event = new AnnotationAuditEvent(joinPoint.getTarget().getClass(), method, joinPoint.getArgs(), result,
-            thrownResult);
+            thrownResult, stopwatch.getTotalTimeMillis());
         AuditManager.getInstance().audit(event);
 
         if (thrownResult != null) {
